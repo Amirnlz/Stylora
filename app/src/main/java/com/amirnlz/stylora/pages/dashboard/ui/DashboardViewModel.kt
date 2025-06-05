@@ -3,12 +3,13 @@ package com.amirnlz.stylora.pages.dashboard.ui
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.amirnlz.stylora.pages.dashboard.data.model.FeedbackResponse
+import com.amirnlz.stylora.pages.feedback.data.model.FeedbackResponse
 import com.amirnlz.stylora.pages.dashboard.domain.model.FeedbackLanguage
 import com.amirnlz.stylora.pages.dashboard.domain.model.FeedbackModel
 import com.amirnlz.stylora.pages.dashboard.domain.model.FeedbackType
 import com.amirnlz.stylora.pages.dashboard.domain.useCase.GiveFeedbackUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -27,31 +28,31 @@ class DashboardViewModel @Inject constructor(
     private val _navigationEvents = MutableSharedFlow<FeedbackResponse>()
     val navigationEvents = _navigationEvents.asSharedFlow()
 
-    private val _userSelection = MutableStateFlow<FeedbackModel>(
+    private val _feedbackModel = MutableStateFlow<FeedbackModel>(
         FeedbackModel(
             imageUri = Uri.EMPTY,
             feedbackType = FeedbackType.NORMAL,
             language = FeedbackLanguage.ENGLISH
         )
     )
-    val userSelection = _userSelection.asStateFlow()
+    val feedbackModel = _feedbackModel.asStateFlow()
 
     fun changeImage(uri: Uri) {
-        _userSelection.value = _userSelection.value.copy(imageUri = uri)
+        _feedbackModel.value = _feedbackModel.value.copy(imageUri = uri)
     }
 
     fun changeFeedbackType(feedbackType: FeedbackType) {
-        _userSelection.value = _userSelection.value.copy(feedbackType = feedbackType)
+        _feedbackModel.value = _feedbackModel.value.copy(feedbackType = feedbackType)
     }
 
     fun changeLanguage(language: FeedbackLanguage) {
-        _userSelection.value = _userSelection.value.copy(language = language)
+        _feedbackModel.value = _feedbackModel.value.copy(language = language)
     }
 
     fun uploadImage() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             _uiState.value = DashboardUiState.Loading
-            val result = giveFeedbackUseCase.invoke(_userSelection.value)
+            val result = giveFeedbackUseCase.invoke(_feedbackModel.value)
             result.onSuccess { response ->
                 _uiState.value = DashboardUiState.Idle
                 _navigationEvents.emit(response)

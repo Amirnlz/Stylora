@@ -7,9 +7,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
-import com.amirnlz.stylora.pages.dashboard.data.model.FeedbackResponse
+import com.amirnlz.stylora.pages.feedback.data.model.FeedbackResponse
 import com.amirnlz.stylora.pages.dashboard.ui.DashboardScreen
 import com.amirnlz.stylora.pages.feedback.ui.FeedbackScreen
+import com.amirnlz.stylora.pages.history.ui.HistoryScreen
 import kotlinx.serialization.json.Json
 
 
@@ -30,8 +31,7 @@ fun AppNavigationHost(navController: NavHostController, modifier: Modifier = Mod
             )
         }
         composable<Routes.History> {
-            Text("HISTORY")
-//            HistoryScreen(navController = navController)
+            HistoryScreen()
         }
         composable<Routes.Feedback> { backStackEntry ->
             val feedbackJson = backStackEntry.toRoute<Routes.Feedback>().feedbackJson

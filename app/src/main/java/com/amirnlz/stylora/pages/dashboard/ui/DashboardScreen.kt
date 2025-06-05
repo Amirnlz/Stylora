@@ -42,7 +42,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import com.amirnlz.stylora.pages.dashboard.data.model.FeedbackResponse
+import com.amirnlz.stylora.pages.feedback.data.model.FeedbackResponse
 import com.amirnlz.stylora.pages.dashboard.domain.model.FeedbackLanguage
 import com.amirnlz.stylora.pages.dashboard.domain.model.FeedbackModel
 import com.amirnlz.stylora.pages.dashboard.domain.model.FeedbackType
@@ -54,9 +54,9 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
     onNavigateToFeedbackScreen: (FeedbackResponse) -> Unit,
 ) {
-    val userSelection by viewModel.userSelection.collectAsState()
+    val feedbackModel by viewModel.feedbackModel.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
-    val selectedImageUri = userSelection.imageUri
+    val selectedImageUri = feedbackModel.imageUri
     val context = LocalContext.current
 
     var feedbackTypeExpanded by remember { mutableStateOf(false) }
@@ -111,7 +111,7 @@ fun DashboardScreen(
                 )
                 DropdownSection(
                     enabled = uiState != DashboardUiState.Loading,
-                    feedbackModel = userSelection,
+                    feedbackModel = feedbackModel,
                     feedbackTypeExpanded = feedbackTypeExpanded,
                     onFeedbackTypeExpandedChange = { feedbackTypeExpanded = it },
                     languageExpanded = languageExpanded,
