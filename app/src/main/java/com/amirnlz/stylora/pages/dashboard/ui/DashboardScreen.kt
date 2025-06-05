@@ -16,10 +16,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
@@ -80,19 +84,33 @@ fun DashboardScreen(
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.Center
-        ) {
-            ImageSection(
-                selectedImageUri = selectedImageUri,
-                context = context
-            )
+        if (selectedImageUri == Uri.EMPTY) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Please select an image to start",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
-            if (selectedImageUri != Uri.EMPTY) {
+        } else {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.Center
+            ) {
+                ImageSection(
+                    selectedImageUri = selectedImageUri,
+                    context = context
+                )
                 DropdownSection(
+                    enabled = uiState != DashboardUiState.Loading,
                     feedbackModel = userSelection,
                     feedbackTypeExpanded = feedbackTypeExpanded,
                     onFeedbackTypeExpandedChange = { feedbackTypeExpanded = it },
@@ -104,12 +122,31 @@ fun DashboardScreen(
             }
         }
 
+
+
         when (uiState) {
             is DashboardUiState.Loading -> CircularProgressIndicator()
-            is DashboardUiState.Error -> Text((uiState as DashboardUiState.Error).message)
+            is DashboardUiState.Error -> {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(vertical = 16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Warning,
+                        contentDescription = "Error",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                    Text(
+                        text = (uiState as DashboardUiState.Error).message,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
             is DashboardUiState.Idle -> {}
         }
-
 
         ButtonSection(
             enabled = uiState != DashboardUiState.Loading,
@@ -123,6 +160,7 @@ fun DashboardScreen(
         )
     }
 }
+
 
 @Composable
 private fun ImageSection(
@@ -158,6 +196,7 @@ private fun ImageSection(
 
 @Composable
 private fun DropdownSection(
+    enabled: Boolean,
     feedbackModel: FeedbackModel,
     feedbackTypeExpanded: Boolean,
     onFeedbackTypeExpandedChange: (Boolean) -> Unit,
@@ -173,14 +212,14 @@ private fun DropdownSection(
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         FeedbackTypeDropdown(
-            expanded = feedbackTypeExpanded,
+            expanded = feedbackTypeExpanded && enabled,
             onExpandedChange = onFeedbackTypeExpandedChange,
             selectedType = feedbackModel.feedbackType,
             onTypeSelected = onFeedbackTypeSelected
         )
 
         LanguageDropdown(
-            expanded = languageExpanded,
+            expanded = languageExpanded && enabled,
             onExpandedChange = onLanguageExpandedChange,
             selectedLanguage = feedbackModel.language,
             onLanguageSelected = onLanguageSelected
@@ -263,7 +302,7 @@ private fun ButtonSection(
 
         Button(
             onClick = onUploadImage,
-            enabled = selectedImageUri != null && enabled,
+            enabled = selectedImageUri != Uri.EMPTY && enabled,
             modifier = Modifier.padding(start = 16.dp)
         ) {
             Text("Upload to Server")
