@@ -1,4 +1,4 @@
-package com.amirnlz.stylora.pages.dashboard.data.model
+package com.amirnlz.stylora.pages.feedback.data.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

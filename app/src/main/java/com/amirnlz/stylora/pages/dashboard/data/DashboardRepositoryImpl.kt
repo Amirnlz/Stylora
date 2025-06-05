@@ -1,13 +1,14 @@
 package com.amirnlz.stylora.pages.dashboard.data
 
 import com.amirnlz.stylora.pages.dashboard.data.data_source.DashboardRemoteDataSource
-import com.amirnlz.stylora.pages.dashboard.data.model.FeedbackResponse
+import com.amirnlz.stylora.pages.feedback.data.model.FeedbackResponse
 import com.amirnlz.stylora.pages.dashboard.domain.model.FeedbackModel
 import com.amirnlz.stylora.pages.dashboard.domain.repo.DashboardRepository
+import com.amirnlz.stylora.pages.feedback.data.data_source.FeedbackRemoteDataSource
 import javax.inject.Inject
 
 class DashboardRepositoryImpl @Inject constructor(
-    private val remoteDataSource: DashboardRemoteDataSource
+    private val remoteDataSource: FeedbackRemoteDataSource
 ) : DashboardRepository {
     override suspend fun giveFeedback(feedbackModel: FeedbackModel): Result<FeedbackResponse> {
         return try {

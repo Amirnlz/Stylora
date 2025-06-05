@@ -1,4 +1,4 @@
-package com.amirnlz.stylora.pages.dashboard.data.data_source
+package com.amirnlz.stylora.pages.feedback.data.data_source
 
 import android.content.Context
 import android.net.Uri
@@ -7,8 +7,8 @@ import android.provider.Settings
 import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.toLowerCase
-import com.amirnlz.stylora.pages.dashboard.data.model.FeedbackResponse
-import com.amirnlz.stylora.pages.dashboard.data.service.DashboardApiService
+import com.amirnlz.stylora.pages.feedback.data.model.FeedbackResponse
+import com.amirnlz.stylora.pages.feedback.data.service.FeedbackApiService
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -19,20 +19,16 @@ import java.io.FileOutputStream
 import java.io.InputStream
 import javax.inject.Inject
 
-class DashboardRemoteDataSourceImpl @Inject constructor(
-    private val apiService: DashboardApiService,
-    private val context: Context,
-) : DashboardRemoteDataSource {
-
+class FeedbackRemoteDataSourceImpl @Inject constructor(
+    private val apiService: FeedbackApiService,
+    private val context: Context
+) : FeedbackRemoteDataSource {
     override suspend fun giveFeedback(
         imageUri: Uri,
         feedbackType: String,
-        language: String,
+        language: String
     ): Response<FeedbackResponse> {
         try {
-            val deviceId =
-                Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
-
             val imageFile = uriToFile(context.applicationContext, imageUri, "upload_image")
                 ?: throw IllegalArgumentException("Could not convert Uri to File")
 
@@ -43,11 +39,11 @@ class DashboardRemoteDataSourceImpl @Inject constructor(
             val imagePart =
                 MultipartBody.Part.createFormData("image_file", imageFile.name, requestBody)
 
-            return apiService.giveFeedback(
+            return apiService.postFeedback(
                 imageFile = imagePart,
                 feedbackType = feedbackType.toLowerCase(Locale.current)
                     .toRequestBody("text/plain".toMediaTypeOrNull()),
-                deviceId = deviceId.toRequestBody("text/plain".toMediaTypeOrNull()),
+                deviceId = getAndroidID().toRequestBody("text/plain".toMediaTypeOrNull()),
                 language = language.toLowerCase(Locale.current).capitalize(Locale.current)
                     .toRequestBody("text/plain".toMediaTypeOrNull())
             )
@@ -55,19 +51,28 @@ class DashboardRemoteDataSourceImpl @Inject constructor(
             throw e
         }
 
+    }
 
+    override suspend fun getFeedbackHistory(): Response<List<FeedbackResponse>> {
+        try {
+            return apiService.getFeedbackHistory(getAndroidID())
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
+    private fun getAndroidID(): String {
+        return Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
     }
 
 
-    // Helper function to convert Uri to File (place in a utility class)
-    // This is a simplified example. Consider edge cases and temporary file management.
     private fun uriToFile(context: Context, uri: Uri, fileNamePrefix: String): File? {
         return try {
             val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
             inputStream?.let { stream ->
                 val extension = getFileExtensionFromUri(context, uri)
                 val tempFile = File.createTempFile(fileNamePrefix, ".$extension", context.cacheDir)
-                tempFile.deleteOnExit() // Optional: ensure cleanup
+                tempFile.deleteOnExit()
                 FileOutputStream(tempFile).use { outputStream ->
                     stream.copyTo(outputStream)
                 }
@@ -81,7 +86,6 @@ class DashboardRemoteDataSourceImpl @Inject constructor(
 
     private fun getFileExtensionFromUri(context: Context, uri: Uri): String? {
         var extension: String? = null
-        // Try to get from ContentResolver
         context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
             if (cursor.moveToFirst()) {
                 val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
@@ -93,13 +97,10 @@ class DashboardRemoteDataSourceImpl @Inject constructor(
                 }
             }
         }
-        // Fallback or if no extension found, you might want a default (e.g., "jpg")
-        // or rely on the MIME type if more accurate.
         if (extension == null) {
             extension = context.contentResolver.getType(uri)?.substringAfterLast('/')
         }
-        return extension ?: "tmp" // Default if cannot determine
+        return extension ?: "tmp"
     }
-
 
 }

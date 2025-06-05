@@ -1,6 +1,6 @@
 package com.amirnlz.stylora.pages.dashboard.domain.repo
 
-import com.amirnlz.stylora.pages.dashboard.data.model.FeedbackResponse
+import com.amirnlz.stylora.pages.feedback.data.model.FeedbackResponse
 import com.amirnlz.stylora.pages.dashboard.domain.model.FeedbackModel
 
 interface DashboardRepository {

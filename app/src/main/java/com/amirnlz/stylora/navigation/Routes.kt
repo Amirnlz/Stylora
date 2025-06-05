@@ -1,6 +1,6 @@
 package com.amirnlz.stylora.navigation
 
-import com.amirnlz.stylora.pages.dashboard.data.model.FeedbackResponse
+import com.amirnlz.stylora.pages.feedback.data.model.FeedbackResponse
 import kotlinx.serialization.Serializable
 
 sealed interface Routes {

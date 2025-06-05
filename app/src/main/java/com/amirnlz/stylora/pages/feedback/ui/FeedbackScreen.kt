@@ -39,7 +39,7 @@ import coil3.compose.AsyncImage
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import com.amirnlz.stylora.pages.dashboard.data.model.FeedbackResponse
+import com.amirnlz.stylora.pages.feedback.data.model.FeedbackResponse
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
