@@ -1,6 +1,5 @@
 package com.amirnlz.stylora.navigation
 
-import android.util.Log
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -10,7 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.amirnlz.stylora.pages.dashboard.data.model.FeedbackResponse
 import com.amirnlz.stylora.pages.dashboard.ui.DashboardScreen
-import com.amirnlz.stylora.pages.dashboard.ui.FeedbackScreen
+import com.amirnlz.stylora.pages.feedback.ui.FeedbackScreen
 import kotlinx.serialization.json.Json
 
 
@@ -25,7 +24,6 @@ fun AppNavigationHost(navController: NavHostController, modifier: Modifier = Mod
             DashboardScreen(
                 modifier = modifier,
                 onNavigateToFeedbackScreen = { feedbackResponse ->
-                    Log.d("Navigation", "onNavigateToFeedbackScreen")
                     val feedbackJson = Json.encodeToString(feedbackResponse)
                     navController.navigate(Routes.Feedback(feedbackJson))
                 }
@@ -38,7 +36,9 @@ fun AppNavigationHost(navController: NavHostController, modifier: Modifier = Mod
         composable<Routes.Feedback> { backStackEntry ->
             val feedbackJson = backStackEntry.toRoute<Routes.Feedback>().feedbackJson
             val feedbackResponse = Json.decodeFromString<FeedbackResponse>(feedbackJson)
-            FeedbackScreen(feedback = feedbackResponse)
+            FeedbackScreen(feedback = feedbackResponse) {
+                navController.popBackStack()
+            }
         }
     }
 }
