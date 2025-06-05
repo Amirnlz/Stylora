@@ -42,3 +42,4 @@ The app follows **Clean Architecture** combined with the **MVVM (Model-View-View
 - **Feedback Response JSON**: JSON keys in the feedback response are not following best practices:
     - Contain spaces (e.g., "Fit Score") instead of a standard format like `fit_score`.
     - Use camelCase (e.g., "FitScore") instead of the more conventional snake_case or kebab-case for JSON keys.
+- **User Images**: Images were being served over `http` instead of `https`, which introduced a security vulnerability and caused difficulties loading them, particularly when using the Coil library. This issue was resolved by updating all image URLs to use `https`, thereby enhancing security and ensuring reliable image loading.
