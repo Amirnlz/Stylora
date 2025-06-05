@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +39,10 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.amirnlz.stylora.pages.dashboard.data.model.FeedbackResponse
+import com.amirnlz.stylora.pages.dashboard.domain.model.FeedbackLanguage
+import com.amirnlz.stylora.pages.dashboard.domain.model.FeedbackModel
+import com.amirnlz.stylora.pages.dashboard.domain.model.FeedbackType
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun DashboardScreen(
@@ -64,10 +69,7 @@ fun DashboardScreen(
     )
 
     LaunchedEffect(Unit) {
-        Log.d("Navigation", "onNavigateToFeedbackScreen - 1 ")
-        viewModel.navigationEvents.collect { feedback ->
-            Log.d("Navigation", "onNavigateToFeedbackScreen - 2")
-
+        viewModel.navigationEvents.collectLatest { feedback ->
             onNavigateToFeedbackScreen(feedback)
         }
     }
@@ -89,9 +91,9 @@ fun DashboardScreen(
                 context = context
             )
 
-            if (selectedImageUri != null) {
+            if (selectedImageUri != Uri.EMPTY) {
                 DropdownSection(
-                    userSelection = userSelection,
+                    feedbackModel = userSelection,
                     feedbackTypeExpanded = feedbackTypeExpanded,
                     onFeedbackTypeExpandedChange = { feedbackTypeExpanded = it },
                     languageExpanded = languageExpanded,
@@ -103,13 +105,14 @@ fun DashboardScreen(
         }
 
         when (uiState) {
-            is DashboardUiState.Loading -> Text("LOADING...")
+            is DashboardUiState.Loading -> CircularProgressIndicator()
             is DashboardUiState.Error -> Text((uiState as DashboardUiState.Error).message)
-            is DashboardUiState.Idle -> {} // No additional UI for Idle
+            is DashboardUiState.Idle -> {}
         }
 
 
         ButtonSection(
+            enabled = uiState != DashboardUiState.Loading,
             selectedImageUri = selectedImageUri,
             onSelectImage = {
                 galleryLauncher.launch(
@@ -155,7 +158,7 @@ private fun ImageSection(
 
 @Composable
 private fun DropdownSection(
-    userSelection: UserSelectionModel,
+    feedbackModel: FeedbackModel,
     feedbackTypeExpanded: Boolean,
     onFeedbackTypeExpandedChange: (Boolean) -> Unit,
     languageExpanded: Boolean,
@@ -172,14 +175,14 @@ private fun DropdownSection(
         FeedbackTypeDropdown(
             expanded = feedbackTypeExpanded,
             onExpandedChange = onFeedbackTypeExpandedChange,
-            selectedType = userSelection.feedbackType,
+            selectedType = feedbackModel.feedbackType,
             onTypeSelected = onFeedbackTypeSelected
         )
 
         LanguageDropdown(
             expanded = languageExpanded,
             onExpandedChange = onLanguageExpandedChange,
-            selectedLanguage = userSelection.language,
+            selectedLanguage = feedbackModel.language,
             onLanguageSelected = onLanguageSelected
         )
     }
@@ -245,6 +248,7 @@ private fun LanguageDropdown(
 
 @Composable
 private fun ButtonSection(
+    enabled: Boolean,
     selectedImageUri: Uri?,
     onSelectImage: () -> Unit,
     onUploadImage: () -> Unit
@@ -253,13 +257,13 @@ private fun ButtonSection(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        Button(onClick = onSelectImage) {
+        Button(onClick = onSelectImage, enabled = enabled) {
             Text(if (selectedImageUri == null) "Select Image" else "Change Image")
         }
 
         Button(
             onClick = onUploadImage,
-            enabled = selectedImageUri != null,
+            enabled = selectedImageUri != null && enabled,
             modifier = Modifier.padding(start = 16.dp)
         ) {
             Text("Upload to Server")

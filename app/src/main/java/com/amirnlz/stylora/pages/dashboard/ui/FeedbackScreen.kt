@@ -15,18 +15,23 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import coil3.request.CachePolicy
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.amirnlz.stylora.pages.dashboard.data.model.FeedbackResponse
 
 @Composable
@@ -57,6 +62,19 @@ fun FeedbackScreen(feedback: FeedbackResponse) {
 
 @Composable
 private fun FeedbackHeader(feedback: FeedbackResponse) {
+    val context = LocalContext.current
+    val imageUrl = remember { feedback.imageURL }
+
+    val requestBuilder = remember(context, imageUrl) {
+        ImageRequest.Builder(context)
+            .data(imageUrl)
+            .crossfade(300)
+            .diskCachePolicy(CachePolicy.ENABLED)
+            .memoryCacheKey(imageUrl)
+            .diskCacheKey(imageUrl)
+            .crossfade(300)
+    }
+
     Card(
         elevation = CardDefaults.cardElevation(4.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
@@ -67,10 +85,9 @@ private fun FeedbackHeader(feedback: FeedbackResponse) {
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Display image if available
             if (feedback.imageURL.isNotEmpty()) {
                 AsyncImage(
-                    model = feedback.imageURL,
+                    model = requestBuilder.build(),
                     contentDescription = "FeedbackResponse image",
                     contentScale = ContentScale.Fit,
                     modifier = Modifier
@@ -80,7 +97,6 @@ private fun FeedbackHeader(feedback: FeedbackResponse) {
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // Overall score
             Text(
                 text = "Overall Score: ${feedback.totalScore}/100",
                 style = MaterialTheme.typography.headlineMedium,
@@ -88,7 +104,6 @@ private fun FeedbackHeader(feedback: FeedbackResponse) {
                 color = MaterialTheme.colorScheme.primary
             )
 
-            // Overall feedback
             Text(
                 text = feedback.overallFeedback,
                 style = MaterialTheme.typography.bodyLarge,
@@ -96,7 +111,6 @@ private fun FeedbackHeader(feedback: FeedbackResponse) {
                 textAlign = TextAlign.Center
             )
 
-            // FeedbackResponse type badge
             Box(
                 modifier = Modifier
                     .padding(top = 12.dp)
@@ -131,7 +145,6 @@ private fun ScoreBreakdownCard(feedback: FeedbackResponse) {
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
-            // Grid layout for scores
             Grid(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -167,10 +180,9 @@ private fun Grid(
 }
 
 @Composable
-private fun ScoreItem(category: String, score: Long) {
+private fun ScoreItem(category: String, score: Double) {
     Box(
         modifier = Modifier
-//            .weight(1f)
             .background(
                 color = MaterialTheme.colorScheme.surface,
                 shape = RoundedCornerShape(8.dp)
@@ -223,7 +235,7 @@ private fun FeedbackDetailItem(title: String, content: String) {
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(top = 4.dp)
         )
-        Divider(
+        HorizontalDivider(
             modifier = Modifier.padding(vertical = 8.dp),
             color = MaterialTheme.colorScheme.outlineVariant,
             thickness = 1.dp

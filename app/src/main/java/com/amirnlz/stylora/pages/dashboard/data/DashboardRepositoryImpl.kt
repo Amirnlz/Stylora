@@ -13,9 +13,8 @@ class DashboardRepositoryImpl @Inject constructor(
         return try {
             val response = remoteDataSource.giveFeedback(
                 imageUri = feedbackModel.imageUri,
-                feedbackType = feedbackModel.feedbackType,
-                deviceId = feedbackModel.deviceId,
-                language = feedbackModel.language,
+                feedbackType = feedbackModel.feedbackType.name,
+                language = feedbackModel.language.name,
             )
             if (response.isSuccessful) {
                 Result.success(response.body()!!)

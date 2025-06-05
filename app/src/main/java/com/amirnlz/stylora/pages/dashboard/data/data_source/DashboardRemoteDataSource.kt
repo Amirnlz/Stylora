@@ -10,6 +10,5 @@ interface DashboardRemoteDataSource {
         imageUri: Uri,
         feedbackType: String,
         language: String,
-        deviceId: String,
     ): Response<FeedbackResponse>
 }

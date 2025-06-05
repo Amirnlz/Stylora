@@ -3,6 +3,7 @@ package com.amirnlz.stylora.pages.dashboard.data.data_source
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
+import android.provider.Settings
 import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.toLowerCase
@@ -27,9 +28,11 @@ class DashboardRemoteDataSourceImpl @Inject constructor(
         imageUri: Uri,
         feedbackType: String,
         language: String,
-        deviceId: String
     ): Response<FeedbackResponse> {
         try {
+            val deviceId =
+                Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
+
             val imageFile = uriToFile(context.applicationContext, imageUri, "upload_image")
                 ?: throw IllegalArgumentException("Could not convert Uri to File")
 

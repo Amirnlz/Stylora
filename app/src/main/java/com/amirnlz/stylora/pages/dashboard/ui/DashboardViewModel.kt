@@ -4,6 +4,9 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.amirnlz.stylora.pages.dashboard.data.model.FeedbackResponse
+import com.amirnlz.stylora.pages.dashboard.domain.model.FeedbackLanguage
+import com.amirnlz.stylora.pages.dashboard.domain.model.FeedbackModel
+import com.amirnlz.stylora.pages.dashboard.domain.model.FeedbackType
 import com.amirnlz.stylora.pages.dashboard.domain.useCase.GiveFeedbackUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -24,10 +27,16 @@ class DashboardViewModel @Inject constructor(
     private val _navigationEvents = MutableSharedFlow<FeedbackResponse>()
     val navigationEvents = _navigationEvents.asSharedFlow()
 
-    private val _userSelection = MutableStateFlow<UserSelectionModel>(UserSelectionModel())
+    private val _userSelection = MutableStateFlow<FeedbackModel>(
+        FeedbackModel(
+            imageUri = Uri.EMPTY,
+            feedbackType = FeedbackType.NORMAL,
+            language = FeedbackLanguage.ENGLISH
+        )
+    )
     val userSelection = _userSelection.asStateFlow()
 
-    fun changeImage(uri: Uri?) {
+    fun changeImage(uri: Uri) {
         _userSelection.value = _userSelection.value.copy(imageUri = uri)
     }
 
