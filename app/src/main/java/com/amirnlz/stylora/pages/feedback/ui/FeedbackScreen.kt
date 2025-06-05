@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -26,19 +25,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
-import coil3.request.CachePolicy
-import coil3.request.ImageRequest
-import coil3.request.crossfade
 import com.amirnlz.stylora.pages.feedback.data.model.FeedbackResponse
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -91,18 +82,7 @@ fun FeedbackScreen(feedback: FeedbackResponse, onBackButtonClick: () -> Unit) {
 
 @Composable
 private fun FeedbackHeader(feedback: FeedbackResponse) {
-    val context = LocalContext.current
-    val imageUrl = remember { feedback.imageURL }
 
-    val requestBuilder = remember(context, imageUrl) {
-        ImageRequest.Builder(context)
-            .data(imageUrl)
-            .crossfade(300)
-            .diskCachePolicy(CachePolicy.ENABLED)
-            .memoryCacheKey(imageUrl)
-            .diskCacheKey(imageUrl)
-            .crossfade(300)
-    }
 
     Card(
         elevation = CardDefaults.cardElevation(4.dp),
@@ -115,14 +95,7 @@ private fun FeedbackHeader(feedback: FeedbackResponse) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (feedback.imageURL.isNotEmpty()) {
-                AsyncImage(
-                    model = requestBuilder.build(),
-                    contentDescription = "FeedbackResponse image",
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier
-                        .size(200.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                )
+                FeedbackNetworkImage(imageUrl = feedback.imageURL)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 

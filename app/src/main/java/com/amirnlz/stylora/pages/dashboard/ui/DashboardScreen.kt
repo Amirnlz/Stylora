@@ -17,14 +17,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -42,17 +47,19 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import com.amirnlz.stylora.pages.feedback.data.model.FeedbackResponse
 import com.amirnlz.stylora.pages.dashboard.domain.model.FeedbackLanguage
 import com.amirnlz.stylora.pages.dashboard.domain.model.FeedbackModel
 import com.amirnlz.stylora.pages.dashboard.domain.model.FeedbackType
+import com.amirnlz.stylora.pages.feedback.data.model.FeedbackResponse
 import kotlinx.coroutines.flow.collectLatest
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     modifier: Modifier = Modifier,
     viewModel: DashboardViewModel = hiltViewModel(),
     onNavigateToFeedbackScreen: (FeedbackResponse) -> Unit,
+    onNavigateToHistory: () -> Unit = {}
 ) {
     val feedbackModel by viewModel.feedbackModel.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
@@ -78,89 +85,106 @@ fun DashboardScreen(
         }
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        if (selectedImageUri == Uri.EMPTY) {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Please select an image to start",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-        } else {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.Center
-            ) {
-                ImageSection(
-                    selectedImageUri = selectedImageUri,
-                    context = context
-                )
-                DropdownSection(
-                    enabled = uiState != DashboardUiState.Loading,
-                    feedbackModel = feedbackModel,
-                    feedbackTypeExpanded = feedbackTypeExpanded,
-                    onFeedbackTypeExpandedChange = { feedbackTypeExpanded = it },
-                    languageExpanded = languageExpanded,
-                    onLanguageExpandedChange = { languageExpanded = it },
-                    onFeedbackTypeSelected = { viewModel.changeFeedbackType(it) },
-                    onLanguageSelected = { viewModel.changeLanguage(it) }
-                )
-            }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Style Feedback") },
+                actions = {
+                    IconButton(
+                        onClick = onNavigateToHistory,
+                        enabled = uiState != DashboardUiState.Loading
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "View History"
+                        )
+                    }
+                }
+            )
         }
-
-
-
-        when (uiState) {
-            is DashboardUiState.Loading -> CircularProgressIndicator()
-            is DashboardUiState.Error -> {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.padding(vertical = 16.dp)
+    ) { innerPadding ->
+        Column(
+            modifier = modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            if (selectedImageUri == Uri.EMPTY) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Warning,
-                        contentDescription = "Error",
-                        tint = MaterialTheme.colorScheme.error
-                    )
                     Text(
-                        text = (uiState as DashboardUiState.Error).message,
-                        color = MaterialTheme.colorScheme.error,
-                        textAlign = TextAlign.Center
+                        text = "Please select an image to start",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+            } else {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    ImageSection(
+                        selectedImageUri = selectedImageUri,
+                        context = context
+                    )
+                    DropdownSection(
+                        enabled = uiState != DashboardUiState.Loading,
+                        feedbackModel = feedbackModel,
+                        feedbackTypeExpanded = feedbackTypeExpanded,
+                        onFeedbackTypeExpandedChange = { feedbackTypeExpanded = it },
+                        languageExpanded = languageExpanded,
+                        onLanguageExpandedChange = { languageExpanded = it },
+                        onFeedbackTypeSelected = { viewModel.changeFeedbackType(it) },
+                        onLanguageSelected = { viewModel.changeLanguage(it) }
                     )
                 }
             }
 
-            is DashboardUiState.Idle -> {}
-        }
+            when (uiState) {
+                is DashboardUiState.Loading -> CircularProgressIndicator()
+                is DashboardUiState.Error -> {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Warning,
+                            contentDescription = "Error",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                        Text(
+                            text = (uiState as DashboardUiState.Error).message,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
 
-        ButtonSection(
-            enabled = uiState != DashboardUiState.Loading,
-            selectedImageUri = selectedImageUri,
-            onSelectImage = {
-                galleryLauncher.launch(
-                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                )
-            },
-            onUploadImage = { viewModel.uploadImage() }
-        )
+                is DashboardUiState.Idle -> {}
+            }
+
+            ButtonSection(
+                enabled = uiState != DashboardUiState.Loading,
+                selectedImageUri = selectedImageUri,
+                onSelectImage = {
+                    galleryLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                },
+                onUploadImage = { viewModel.uploadImage() }
+            )
+        }
     }
 }
-
 
 @Composable
 private fun ImageSection(

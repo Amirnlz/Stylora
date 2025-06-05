@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
@@ -24,28 +25,37 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil3.compose.AsyncImage
 import com.amirnlz.stylora.pages.feedback.data.model.FeedbackResponse
+import com.amirnlz.stylora.pages.feedback.ui.FeedbackNetworkImage
+import java.text.SimpleDateFormat
+import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
     modifier: Modifier = Modifier,
     viewModel: HistoryViewModel = hiltViewModel(),
-    onFeedbackClick: (FeedbackResponse) -> Unit = {}
+    onFeedbackClick: (FeedbackResponse) -> Unit = {},
+    onBackClick: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -53,22 +63,39 @@ fun HistoryScreen(
         viewModel.getFeedbackHistory()
     }
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        when (val state = uiState) {
-            is HistoryUiState.Loading -> LoadingState()
-            is HistoryUiState.Error -> ErrorState(message = state.message) {
-                viewModel.getFeedbackHistory()
-            }
-
-            is HistoryUiState.Success -> FeedbackListState(
-                items = state.items,
-                onFeedbackClick = onFeedbackClick
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Feedback History") },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                }
             )
+        }
+    ) { innerPadding ->
+        Box(
+            modifier = modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            when (val state = uiState) {
+                is HistoryUiState.Loading -> LoadingState()
+                is HistoryUiState.Error -> ErrorState(message = state.message) {
+                    viewModel.getFeedbackHistory()
+                }
+
+                is HistoryUiState.Success -> FeedbackListState(
+                    items = state.items,
+                    onFeedbackClick = onFeedbackClick
+                )
+            }
         }
     }
 }
@@ -177,19 +204,10 @@ private fun FeedbackItemCard(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Feedback image
-            AsyncImage(
-                model = feedback.imageURL,
-                contentDescription = "Feedback image",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(8.dp))
-            )
+            FeedbackNetworkImage(imageUrl = feedback.imageURL, size = 80)
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            // Feedback details
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -215,14 +233,9 @@ private fun FeedbackItemCard(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                Text(
-                    text = "Created: ${feedback.createdAt}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                FormattedDateText(dateString = feedback.createdAt)
             }
 
-            // Chevron icon
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = "View details",
@@ -230,4 +243,41 @@ private fun FeedbackItemCard(
             )
         }
     }
+}
+
+@Composable
+fun FormattedDateText(
+    dateString: String,
+    style: TextStyle = MaterialTheme.typography.bodyMedium,
+    color: Color = MaterialTheme.colorScheme.onSurface
+) {
+    val formattedDate = remember(dateString) {
+        try {
+            // Try parsing ISO format first
+            val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+            val date = isoFormat.parse(dateString)
+
+            // Format to readable string
+            val displayFormat = SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault())
+            displayFormat.format(date!!)
+        } catch (e: Exception) {
+            try {
+                // Try parsing without time
+                val dateOnlyFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val date = dateOnlyFormat.parse(dateString)
+
+                val displayFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+                displayFormat.format(date!!)
+            } catch (e2: Exception) {
+                // Fallback to original string if parsing fails
+                "Created: $dateString"
+            }
+        }
+    }
+
+    Text(
+        text = formattedDate,
+        style = style,
+        color = color
+    )
 }

@@ -9,13 +9,19 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import retrofit2.Retrofit
 
 @Module
 @InstallIn(SingletonComponent::class)
 object FeedbackModule {
 
     @Provides
-    fun bindFeedbackDataSource(
+    fun provideFeedbackApiService(retrofit: Retrofit): FeedbackApiService {
+        return retrofit.create(FeedbackApiService::class.java)
+    }
+
+    @Provides
+    fun provideFeedbackDataSource(
         apiService: FeedbackApiService,
         @ApplicationContext context: Context
     ): FeedbackRemoteDataSource {
